@@ -1,0 +1,14 @@
+{
+    "_meta": {
+        "version": "1.0",
+        "strict": false,
+        "description": "Minimal backup settings for the PlexBackup.ps1 script: skips Plex folders that are re-downloaded or regenerated after restore."
+    },
+    "ExcludeDirs": {
+        "_meta": {
+            "default": ["Diagnostics","Crash Reports","Updates","Logs"],
+            "note": "Cache, Codecs, Media and Metadata are rebuilt by Plex after restore. Custom (uploaded) posters and artwork stored under Metadata are NOT recoverable; remove 'Metadata' from the list if you use them."
+        },
+        "value": ["Diagnostics","Crash Reports","Updates","Logs","Cache","Codecs","Media","Metadata"]
+    }
+}
