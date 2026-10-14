@@ -1,5 +1,16 @@
 # PlexBackup.ps1
-[PlexBackup.ps1](PlexBackup.ps1) is a [PowerShell](https://docs.microsoft.com/en-us/powershell/scripting/overview) script that can back up and restore [Plex](https://www.plex.tv/) application data files on a Windows system. This document explains how it works and how to use it. If you don't care about the details and just want to get the instruction, see [Getting Started](GETTING%20STARTED.md).
+[PlexBackup.ps1](PlexBackup.ps1) is a [PowerShell](https://docs.microsoft.com/en-us/powershell/scripting/overview) script that can back up and restore [Plex](https://www.plex.tv/) application data files on a Windows system. This document explains how it works and how to use it. If you don't care about the details and just want to get the instruction, see [Getting Started](docs/GETTING%20STARTED.md).
+
+## Repository contents
+
+| Script | Launcher | Purpose | Details |
+|---|---|---|---|
+| [PlexBackup.ps1](PlexBackup.ps1) | [RunPlexBackup.bat](RunPlexBackup.bat) | Backs up and restores Plex | This document |
+| [PlexCleanup.ps1](PlexCleanup.ps1) | [RunPlexCleanup.bat](RunPlexCleanup.bat) | Removes unused Plex data | [Plex cleanup](docs/PLEX%20CLEANUP.md) |
+| [CheckUsbDisks.ps1](CheckUsbDisks.ps1) | [RunCheckUsbDisks.bat](RunCheckUsbDisks.bat) | Checks external USB disks with `chkdsk /F` (stopping and restarting the apps using them) | [Check USB disks](docs/CHECK%20USB%20DISKS.md) |
+| [RegisterScheduledTask.ps1](RegisterScheduledTask.ps1) | [RegisterScheduledTask.bat](RegisterScheduledTask.bat) | Runs the scripts above on a schedule | [Scheduled tasks](docs/SCHEDULED%20TASKS.md) |
+
+The launchers (`.bat` files) run the scripts with the right privileges, bypassing the PowerShell execution policy, and keep the window open at the end; pass the script arguments to them. The scripts and launchers must stay in the same folder, along with the config file (`PlexBackup.ps1.json`). Documentation is in the [docs](docs) folder.
 
 ## Introduction
 Plex does not offer a meaningful backup feature. Yes, it can back up a Plex database which can be handy in case of a Plex database corruption, but if you need to move your Plex instance to a different system or restore it after a hard drive crash, a single database backup will be of little use. For a meaningful backup, in addition to the Plex database, you will need a copy of the Plex Windows registry key and tens (or hundreds) of thousands of Plex application data files. Keep in mind that backing up gigabytes of data files may take a long time, especially when they are copied remotely, such as to a NAS share. And you must keep the Plex Media Server stopped while the backup job is running (otherwise, it can corrupt the data). In the other words, a meaningful Plex backup is a challenge to which I could not find a good solution, so I decided to build my own. Ladies and gentlemen, meet [PlexBackup.ps1](PlexBackup.ps1).
@@ -423,10 +434,12 @@ By default, PlexBackup will use the username provided via the SMTP credentials a
 
 ## See also
 
-- [Getting started](GETTING%20STARTED.md)
-- [Scheduled Plex backup](SCHEDULED%20PLEX%20BACKUP.md)
-- [Plex cleanup](PLEX%20CLEANUP.md)
-- [Frequently asked questions (FAQs)](FAQs.md)
+- [Getting started](docs/GETTING%20STARTED.md)
+- [Scheduled tasks](docs/SCHEDULED%20TASKS.md)
+- [Scheduled Plex backup](docs/SCHEDULED%20PLEX%20BACKUP.md) (manual setup)
+- [Plex cleanup](docs/PLEX%20CLEANUP.md)
+- [Check USB disks](docs/CHECK%20USB%20DISKS.md)
+- [Frequently asked questions (FAQs)](docs/FAQs.md)
 
 ## Syntax
 ```PowerShell

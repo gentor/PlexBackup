@@ -2279,6 +2279,7 @@ function StopPlexMediaServer {
 
                         Write-Verbose "Failed to stop Plex Media Server process gracefully."
                         Write-Verbose "Killing Plex Media Server process."
+                        Write-LogWarning "Plex Media Server did not stop gracefully in 60 seconds; killed it."
 
                         taskkill /f /im $Script:PlexServerFileName /t >$nul 2>&1
                     }

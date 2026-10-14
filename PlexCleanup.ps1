@@ -50,6 +50,12 @@ Skips the file cleanup phase (Plex Media Server will not be stopped).
 .PARAMETER NoRestart
 Does not restart Plex Media Server after the file cleanup.
 
+.PARAMETER LogFile
+Path to the log file receiving all script output. Default: 'Logs\PlexCleanup_<date>_<time>.log' in the script folder. No log file is written with -WhatIf.
+
+.PARAMETER NoLog
+Does not write a log file.
+
 .EXAMPLE
 .\PlexCleanup.ps1 -WhatIf
 Shows what would be done without changing anything.
@@ -94,7 +100,13 @@ param (
     $SkipFiles,
 
     [switch]
-    $NoRestart
+    $NoRestart,
+
+    [string]
+    $LogFile = $null,
+
+    [switch]
+    $NoLog
 )
 
 #-------------------------------[ CONSTANTS ]------------------------------
@@ -119,6 +131,9 @@ $DATABASES_DIR = "Plug-in Support\Databases"
 
 # Automatic database backup file name format, e.g. 'xyz.db-2026-10-11'.
 $REGEX_DB_BACKUP = '^(.+\.db)-\d{4}-\d{2}-\d{2}$'
+
+# Default log file folder.
+$LOG_DIR = Join-Path $PSScriptRoot "Logs"
 
 #-------------------------------[ FUNCTIONS ]------------------------------
 
@@ -276,7 +291,7 @@ function StopPlex {
     }
 
     if (GetPlexProcess) {
-        Write-Verbose "Failed to stop Plex Media Server gracefully; killing it."
+        Write-Warning "Plex Media Server did not stop gracefully in 60 seconds; killing it."
         $null = & taskkill.exe /f /t /im "$PLEX_PROCESS_NAME.exe" 2>&1
         Start-Sleep -Seconds 3
     }
@@ -381,11 +396,60 @@ function RunFileCleanup {
     return $total
 }
 
+#--------------------------------------------------------------------------
+# StartLog
+#   Starts writing the script output to the log file and returns its path.
+function StartLog {
+    if ($Script:LogFile) {
+        $path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Script:LogFile)
+    } else {
+        $path = Join-Path $LOG_DIR "PlexCleanup_$(Get-Date -Format 'yyyy-MM-dd_HHmmss').log"
+    }
+
+    try {
+        $dir = Split-Path -Parent $path
+
+        if (!(Test-Path -LiteralPath $dir -PathType Container)) {
+            $null = New-Item -Path $dir -ItemType Directory -Force -ErrorAction Stop
+        }
+
+        $null = Start-Transcript -LiteralPath $path -Append -ErrorAction Stop
+        return $path
+    }
+    catch {
+        Write-Warning "Cannot write log file '$path': $($_.Exception.Message)"
+        return $null
+    }
+}
+
+#--------------------------------------------------------------------------
+# ExitScript
+#   Stops writing the log file and exits with the specified code.
+function ExitScript {
+    param (
+        [int]
+        $code
+    )
+
+    if ($Script:logPath) {
+        Write-Host "Log file: $Script:logPath"
+        $null = Stop-Transcript
+    }
+
+    exit $code
+}
+
 #---------------------------------[ MAIN ]---------------------------------
+
+$logPath = $null
+
+if (!$NoLog -and !$WhatIfPreference) {
+    $logPath = StartLog
+}
 
 if (!(Test-Path -LiteralPath $PlexAppDataDir -PathType Container)) {
     Write-Error "Plex app data folder '$PlexAppDataDir' does not exist."
-    exit 1
+    ExitScript 1
 }
 
 $plexProcess = GetPlexProcess
@@ -413,7 +477,7 @@ if (!$SkipMaintenance) {
             # Do not stop Plex while a maintenance task (e.g. optimize) may still be running.
             Write-Error ("Maintenance failed; no files were removed: $($_.Exception.Message) " +
                 "(use -SkipMaintenance to skip this phase).")
-            exit 1
+            ExitScript 1
         }
     }
 }
@@ -448,8 +512,10 @@ if (!$SkipFiles) {
     }
 
     if ($exitCode) {
-        exit $exitCode
+        ExitScript $exitCode
     }
 }
 
 Write-Host "Done."
+
+ExitScript 0

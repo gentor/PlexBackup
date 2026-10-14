@@ -13,8 +13,8 @@ Log on to Windows under the same account your Plex Media Server runs.
 
 To download the Plex backup files, either clone this repository or simply copy the following files:
 
-- [PlexBackup.ps1](PlexBackup.ps1)
-- [PlexBackup.ps1.SAMPLE.json](PlexBackup.ps1.SAMPLE.json)
+- [PlexBackup.ps1](../PlexBackup.ps1)
+- [PlexBackup.ps1.SAMPLE.json](../PlexBackup.ps1.SAMPLE.json)
 
 If you choose to copy the files manually, make sure that your procedure does not corrupt characters (it can happen with special characters, like dashes, which may be converted to non-ASCII characters during the copy operation).
 
@@ -57,15 +57,15 @@ In the PowerShell prompt, switch to the Plex backup script folder and enter the 
 .\PlexBackup.ps1
 ```
 
-If PowerShell does not allow you to launch scripts, [adjust the execution policy settings](README.md#script-execution) (you may also need to make a non-destructive change to the script to fool Windows into thinking that it is a local script and not a script downloaded from the Internet).
+If PowerShell does not allow you to launch scripts, [adjust the execution policy settings](../README.md#script-execution) (you may also need to make a non-destructive change to the script to fool Windows into thinking that it is a local script and not a script downloaded from the Internet).
 
 If the script prompts you to [update the NuGet version](https://docs.microsoft.com/en-us/powershell/gallery/how-to/getting-support/bootstrapping-nuget), type in `Y` to do so.
 
-Once the script runs, monitor the output. If an errors occurs, try to understand the error message and correct the problem. If you get stuck, submit an [issue](../../issues).
+Once the script runs, monitor the output. If an errors occurs, try to understand the error message and correct the problem. If you get stuck, submit an [issue](../../../issues).
 
 ## Advanced setup
 
-Once you verify that Plex backup is working, you can adjust the settings to better serve your needs. You can set it up to receive [email notifications](README.md#email-notification), have it send you a log file upon completion, run it as a [scheduled task](SCHEDULED%20PLEX%20BACKUP.md), and do more.
+Once you verify that Plex backup is working, you can adjust the settings to better serve your needs. You can set it up to receive [email notifications](../README.md#email-notification), have it send you a log file upon completion, run it as a [scheduled task](SCHEDULED%20TASKS.md), and do more.
 
 ## Restore
 

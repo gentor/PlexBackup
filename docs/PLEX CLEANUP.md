@@ -1,6 +1,6 @@
 # Plex cleanup
 
-The [PlexCleanup.ps1](PlexCleanup.ps1) script removes unused and outdated Plex Media Server data to free up disk space (and to make backups smaller). It is independent from the backup script, but it is a good idea to run it right before a backup.
+The [PlexCleanup.ps1](../PlexCleanup.ps1) script removes unused and outdated Plex Media Server data to free up disk space (and to make backups smaller). It is independent from the backup script, but it is a good idea to run it right before a backup.
 
 ## What it does
 
@@ -37,11 +37,13 @@ Plex recreates all of these as needed. The script never deletes the `Metadata` a
 
 At the end, the script reports how much space was freed.
 
+Everything the script prints is also saved to a log file: `Logs\PlexCleanup_<date>_<time>.log` in the script folder (a new file for every run). Use the `LogFile` parameter to save it elsewhere, or the `NoLog` switch to skip it. No log file is written with `-WhatIf`.
+
 ## Usage
 
 Unlike the backup script, the cleanup script does not need to run as Administrator. Run it from PowerShell as the user running Plex Media Server.
 
-The easiest way is to double-click [RunPlexCleanup.bat](RunPlexCleanup.bat): it runs the script (bypassing the PowerShell execution policy) and keeps the window open at the end. Any arguments are passed to the script, e.g. `RunPlexCleanup.bat -WhatIf`.
+The easiest way is to double-click [RunPlexCleanup.bat](../RunPlexCleanup.bat): it runs the script (bypassing the PowerShell execution policy) and keeps the window open at the end. Any arguments are passed to the script, e.g. `RunPlexCleanup.bat -WhatIf`.
 
 Preview what will be done (nothing is changed):
 
@@ -80,6 +82,8 @@ powershell -ExecutionPolicy Bypass -File .\PlexCleanup.ps1 -SkipFiles
 | `SkipMaintenance` | | Skip the maintenance phase |
 | `SkipFiles` | | Skip the file cleanup phase (Plex is not stopped) |
 | `NoRestart` | | Do not restart Plex after the file cleanup |
+| `LogFile` | `Logs\PlexCleanup_<date>_<time>.log` in the script folder | Log file receiving all script output |
+| `NoLog` | | Do not write a log file |
 | `WhatIf` | | Show what would be done without changing anything |
 | `Verbose` | | Show additional details |
 
@@ -92,4 +96,8 @@ To have Plex do most of the maintenance on its own, enable the following options
 - __Settings__ > __Scheduled Tasks__: __Remove old bundles every week__, __Optimize database every week__ and __Remove old cache files every week__
 - __Settings__ > __Library__: __Empty trash automatically after every scan__
 
-You can also run the cleanup script on a schedule using Windows Task Scheduler (see [Scheduled Plex backup](SCHEDULED%20PLEX%20BACKUP.md) for the general steps), e.g. right before the scheduled backup.
+You can also run the cleanup script on a schedule, e.g. right before the backup, in the same scheduled task (see [Scheduled tasks](SCHEDULED%20TASKS.md)):
+
+```
+RegisterScheduledTask.bat -Task Cleanup,Backup
+```
