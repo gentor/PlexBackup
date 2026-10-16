@@ -156,7 +156,7 @@ The number of retries on failed copy operations (corresponds to the Robocopy /R 
 Specifies the wait time between retries in seconds (corresponds to the Robocopy /W switch).
 
 .PARAMETER RawOutput
-Set this switch to display raw output from the external commands, such as Robocopy or 7-zip.
+Set this switch to display raw output from the external commands, such as Robocopy or 7-zip. Without it, the Robocopy backup type logs only the Robocopy summary (totals, times and speed).
 
 .PARAMETER Inactive
 When set, allows the script to continue if Plex Media Server is not running.
@@ -2647,7 +2647,7 @@ function RobocopyFiles {
                 Start-Sleep -Seconds $sleepSec
                 Write-LogWarning "Seriously!"
                 Start-Sleep -Seconds $sleepSec
-                Write-LogWarning "There will be no feedback unless something goes wrong."
+                Write-LogWarning "There will be no feedback until it is done (then you will see a summary)."
                 Start-Sleep -Seconds $sleepSec
                 Write-LogWarning "If you get worried, use Task Manager to check CPU/disk usage."
                 Start-Sleep -Seconds $sleepSec
@@ -2663,7 +2663,30 @@ function RobocopyFiles {
 
             if (!$Script:Test) {
                 if ($Script:Quiet -or (!$Script:RawOutput)) {
-                    robocopy @cmdArgs *>&1 | Out-Null
+                    # Skip the file and folder lists and the progress: only the summary is logged.
+                    $cmdArgs.AddRange(@("/NFL", "/NDL", "/NP"))
+
+                    # The summary (totals, times, speed) follows the last separator line; find it by
+                    # the separator rather than by the labels, which Windows translates.
+                    $summary = $null
+
+                    robocopy @cmdArgs *>&1 | ForEach-Object {
+                        $line = "$_".TrimEnd()
+
+                        if ($line -match '^\s*-{20,}$') {
+                            $summary = New-Object System.Collections.Generic.List[string]
+                        } elseif (($null -ne $summary) -and $line) {
+                            $summary.Add($line)
+                        }
+                    }
+
+                    if ($summary -and ($summary.Count -gt 0)) {
+                        Write-LogInfo "Robocopy summary:"
+
+                        foreach ($line in $summary) {
+                            Write-LogInfo $line -Indent 1
+                        }
+                    }
                 } else {
                     robocopy @cmdArgs
                 }

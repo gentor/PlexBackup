@@ -608,7 +608,7 @@ Specifies the wait time between retries in seconds (corresponds to the Robocopy 
 
 `RawOutput`
 
-Set this switch to display raw output from the external commands, such as Robocopy or 7-zip.
+Set this switch to display raw output from the external commands, such as Robocopy or 7-zip. Without it, the `Robocopy` backup type logs only the Robocopy summary (folders, files and bytes copied, skipped and failed, times and speed) when the copy is done.
 
 `Inactive`
 
