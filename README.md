@@ -7,7 +7,7 @@
 |---|---|---|---|
 | [PlexBackup.ps1](PlexBackup.ps1) | [RunPlexBackup.bat](RunPlexBackup.bat) | Backs up and restores Plex | This document |
 | [PlexCleanup.ps1](PlexCleanup.ps1) | [RunPlexCleanup.bat](RunPlexCleanup.bat) | Removes unused Plex data | [Plex cleanup](docs/PLEX%20CLEANUP.md) |
-| [CheckUsbDisks.ps1](CheckUsbDisks.ps1) | [RunCheckUsbDisks.bat](RunCheckUsbDisks.bat) | Checks external USB disks with `chkdsk /F` (stopping and restarting the apps using them) | [Check USB disks](docs/CHECK%20USB%20DISKS.md) |
+| [CheckUsbDisks.ps1](CheckUsbDisks.ps1) | [RunCheckUsbDisks.bat](RunCheckUsbDisks.bat) | Checks external USB disks with `chkdsk /F`, or `fsck.exfat` in WSL for exFAT (stopping and restarting the apps using them) | [Check USB disks](docs/CHECK%20USB%20DISKS.md) |
 | [RegisterScheduledTask.ps1](RegisterScheduledTask.ps1) | [RegisterScheduledTask.bat](RegisterScheduledTask.bat) | Runs the scripts above on a schedule | [Scheduled tasks](docs/SCHEDULED%20TASKS.md) |
 
 The launchers (`.bat` files) run the scripts with the right privileges, bypassing the PowerShell execution policy, and keep the window open at the end; pass the script arguments to them. The scripts and launchers must stay in the same folder, along with the config file (`PlexBackup.ps1.json`). Documentation is in the [docs](docs) folder.

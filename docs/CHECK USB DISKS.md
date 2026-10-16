@@ -1,6 +1,6 @@
 # Check USB disks
 
-The [CheckUsbDisks.ps1](../CheckUsbDisks.ps1) script checks and repairs the file systems of external USB disks (such as the disks holding Plex libraries or backups) with `chkdsk /F`. Because `chkdsk /F` needs exclusive access to a volume, the script stops the apps using the disks first and starts them again when the checks are done.
+The [CheckUsbDisks.ps1](../CheckUsbDisks.ps1) script checks and repairs the file systems of external USB disks (such as the disks holding Plex libraries or backups) with `chkdsk /F` (exFAT volumes with `fsck.exfat` in WSL, see [exFAT volumes](#exfat-volumes)). Because the check needs exclusive access to a volume, the script stops the apps using the disks first and starts them again when the checks are done.
 
 ## What it does
 
@@ -14,7 +14,7 @@ The [CheckUsbDisks.ps1](../CheckUsbDisks.ps1) script checks and repairs the file
     - WSL distributions and Docker Desktop disk images stored on a volume (see [Docker and WSL](#docker-and-wsl)).
 3. Waits until Plex Media Server has no running tasks (such as a library scan or database optimization) and nobody is watching anything, so that Plex is not interrupted in the middle of a task (see [Waiting for Plex](#waiting-for-plex)).
 4. Stops these apps: Docker containers via `docker stop`, services (along with the services depending on them) via the Service Control Manager, processes gracefully first and forcefully after `TimeoutSeconds`.
-5. Runs `chkdsk <drive>: /F /X` for each volume, one at a time.
+5. Runs `chkdsk <drive>: /F /X` for each volume (`fsck.exfat -y` in WSL for exFAT volumes), one at a time.
 6. Starts the stopped apps and Docker containers again (even if a check fails), and reports the result of each check.
 
 Notes:
@@ -23,6 +23,23 @@ Notes:
 - The `/X` switch forces the volume to dismount before the check. This closes the files kept open by apps the script does not stop: system processes (such as Explorer, Windows Search, Windows Defender or driver hosts like `WUDFHost.exe`; in general, any process started from the Windows folder unless it is listed in `Processes`) and apps it did not detect.
 - Processes are restarted with the same command line, as a non-elevated user (the same way PlexBackup restarts Plex). Processes run by other users are stopped, but not restarted. Child processes (such as Plex Transcoder) are not restarted on their own; their parent apps start them as needed.
 - Checking a large disk can take a long time (hours if it has bad sectors), and the apps stay stopped until all checks finish.
+
+## exFAT volumes
+
+`chkdsk` cannot repair some exFAT errors: it saves the same lost clusters in a new `FOUND.nnn` folder on every run, and a damaged `FOUND.nnn` folder may not even be deletable (_The file or directory is corrupted and unreadable_). So the script checks exFAT volumes with `fsck.exfat` from [exfatprogs](https://github.com/exfatprogs/exfatprogs) in WSL instead:
+
+1. Before stopping any apps, it picks the WSL distribution: the one given by `WslDistro`, otherwise the default WSL distribution (skipping Docker Desktop's `docker-desktop` distributions, WSL 1 distributions and distributions stored on a checked volume). If there is none, it installs Debian (`wsl --install -d Debian --no-launch`). Then it installs `exfatprogs` (and `blkid`) in the distribution if they are missing, using its package manager (`apt-get`, `apk`, `dnf`, `zypper` or `pacman`). Everything runs as `root`, so no Linux user account or password is needed.
+2. For each exFAT volume, it forces the volume to dismount (`fsutil volume dismount`, which closes the files kept open by system processes, like `chkdsk /X` does), takes the disk offline, attaches it to WSL (`wsl --mount \\.\PHYSICALDRIVE<n> --bare`; WSL refuses disks with open files), finds the volume in WSL by its serial number (so it never guesses the `/dev/sdX` name), and runs `fsck.exfat -y` on it. Lost clusters are freed, not saved in a folder.
+3. It detaches the disk (`wsl --unmount`) and waits for the drive letter to come back (bringing the disk online if needed).
+
+Notes:
+
+- WSL 2 with `wsl --mount` support is required (Windows 11, or Windows 10 with WSL from the Microsoft Store). Microsoft does not officially support attaching USB disks this way, but it works with many USB 3 enclosures; try `wsl --mount \\.\PHYSICALDRIVE<n> --bare` and `wsl --unmount \\.\PHYSICALDRIVE<n>` once by hand first.
+- Since WSL takes the whole disk offline, every other volume (with a drive letter) on that disk must be checked as well, so that the apps using it are stopped. Otherwise the exFAT volume is skipped with a warning.
+- WSL distributions belong to a user, so run the script (or the scheduled task) as the user owning the distribution.
+- The first run may take a while: it may install the distribution and the tools (internet access is needed).
+- If the distribution or the tools cannot be installed, the exFAT volumes are not checked (and the script exits with code `1`), but the other volumes are.
+- Use the `UseChkdsk` switch to check exFAT volumes with `chkdsk` as before.
 
 ## Waiting for Plex
 
@@ -90,6 +107,8 @@ RegisterScheduledTask.bat -Task CheckUsbDisks -DriveLetter E,F,G
 | `PlexToken` | Read from the registry | Plex authentication token |
 | `PlexIdleTimeoutMinutes` | `60` | Maximum time to wait for Plex to finish its tasks and playback sessions (`0`: do not wait) |
 | `SkipDocker` | | Do not stop Docker containers, Docker Desktop or WSL |
+| `WslDistro` | The default WSL distribution, or `Debian` (installed) if there is none | WSL distribution used to check exFAT volumes |
+| `UseChkdsk` | | Check exFAT volumes with `chkdsk` instead of `fsck.exfat` in WSL |
 | `NoRestart` | | Do not start the stopped apps after the checks |
 | `LogFile` | `Logs\CheckUsbDisks_<date>_<time>.log` in the script folder | Log file receiving all script output |
 | `NoLog` | | Do not write a log file |
@@ -98,10 +117,10 @@ RegisterScheduledTask.bat -Task CheckUsbDisks -DriveLetter E,F,G
 
 ## Log files
 
-Everything the script prints (including the `chkdsk` output for each volume) is also saved to a log file: `Logs\CheckUsbDisks_<date>_<time>.log` in the script folder (a new file for every run). Use the `LogFile` parameter to save it elsewhere, or the `NoLog` switch to skip it. No log file is written with `-WhatIf`.
+Everything the script prints (including the `chkdsk` or `fsck.exfat` output for each volume) is also saved to a log file: `Logs\CheckUsbDisks_<date>_<time>.log` in the script folder (a new file for every run). Use the `LogFile` parameter to save it elsewhere, or the `NoLog` switch to skip it. No log file is written with `-WhatIf`.
 
 The log file must not be on a checked volume (it is dismounted during the check). If it would be, the script saves it in `C:\ProgramData\CheckUsbDisks\Logs` instead (the console and the end of the log show where it went).
 
 ## Exit codes
 
-The script exits with code `0` if every volume was checked successfully (the `chkdsk` exit codes `0` (no errors), `1` (errors fixed) or `2` (cleanup performed)), and with code `1` otherwise (e.g. `chkdsk` exit code `3`: the volume could not be checked or errors could not be fixed).
+The script exits with code `0` if every volume was checked successfully (the `chkdsk` exit codes `0` (no errors), `1` (errors fixed) or `2` (cleanup performed); the `fsck.exfat` exit codes `0` (no errors) or `1` (errors fixed)), and with code `1` otherwise (e.g. `chkdsk` exit code `3` or `fsck.exfat` exit code `4`: errors could not be fixed; `fsck.exfat` exit code `8`: the volume could not be checked).
