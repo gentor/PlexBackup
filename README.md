@@ -9,6 +9,7 @@
 | [PlexCleanup.ps1](PlexCleanup.ps1) | [RunPlexCleanup.bat](RunPlexCleanup.bat) | Removes unused Plex data | [Plex cleanup](docs/PLEX%20CLEANUP.md) |
 | [CheckUsbDisks.ps1](CheckUsbDisks.ps1) | [RunCheckUsbDisks.bat](RunCheckUsbDisks.bat) | Checks external USB disks with `chkdsk /F`, or `fsck.exfat` in WSL for exFAT (stopping and restarting the apps using them) | [Check USB disks](docs/CHECK%20USB%20DISKS.md) |
 | [RegisterScheduledTask.ps1](RegisterScheduledTask.ps1) | [RegisterScheduledTask.bat](RegisterScheduledTask.bat) | Runs the scripts above on a schedule | [Scheduled tasks](docs/SCHEDULED%20TASKS.md) |
+| [PlexFolderSizes.ps1](PlexFolderSizes.ps1) | [RunPlexFolderSizes.bat](RunPlexFolderSizes.bat) | Shows the sizes of the Plex folders | [Plex folder sizes](docs/PLEX%20FOLDER%20SIZES.md) |
 
 The launchers (`.bat` files) run the scripts with the right privileges, bypassing the PowerShell execution policy, and keep the window open at the end; pass the script arguments to them. The scripts and launchers must stay in the same folder, along with the config file (`PlexBackup.ps1.json`). Documentation is in the [docs](docs) folder.
 
@@ -438,6 +439,7 @@ By default, PlexBackup will use the username provided via the SMTP credentials a
 - [Scheduled tasks](docs/SCHEDULED%20TASKS.md)
 - [Scheduled Plex backup](docs/SCHEDULED%20PLEX%20BACKUP.md) (manual setup)
 - [Plex cleanup](docs/PLEX%20CLEANUP.md)
+- [Plex folder sizes](docs/PLEX%20FOLDER%20SIZES.md)
 - [Check USB disks](docs/CHECK%20USB%20DISKS.md)
 - [Frequently asked questions (FAQs)](docs/FAQs.md)
 
