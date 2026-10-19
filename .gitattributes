@@ -1,0 +1,6 @@
+# Store Windows scripts as is (with CRLF line endings, like upstream),
+# regardless of the core.autocrlf setting (e.g. 'input' in WSL).
+*.ps1 -text
+*.psm1 -text
+*.bat -text
+*.cmd -text
